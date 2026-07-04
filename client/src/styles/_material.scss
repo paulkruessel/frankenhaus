@@ -1,0 +1,18 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: (
+      plain-family: 'Inter, Roboto, Arial, sans-serif',
+      brand-family: 'Inter, Roboto, Arial, sans-serif',
+    ),
+    density: -1,
+  ));
+}
