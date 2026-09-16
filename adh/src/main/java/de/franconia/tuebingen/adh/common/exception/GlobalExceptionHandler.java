@@ -2,6 +2,7 @@ package de.franconia.tuebingen.adh.common.exception;
 
 import de.franconia.tuebingen.adh.auth.EmailAlreadyExistsException;
 import de.franconia.tuebingen.adh.auth.InvalidRefreshTokenException;
+import de.franconia.tuebingen.adh.profile.AddressNotFoundException;
 import de.franconia.tuebingen.adh.profile.ProfileNotFoundException;
 
 import org.springframework.http.HttpStatus;
@@ -137,6 +138,19 @@ public class GlobalExceptionHandler {
     )
     public ResponseEntity<ApiError> profileNotFound(
             ProfileNotFoundException exception
+    ) {
+
+    return error(
+            HttpStatus.NOT_FOUND,
+            exception.getMessage()
+    );
+    }
+
+    @ExceptionHandler(
+        AddressNotFoundException.class
+    )
+    public ResponseEntity<ApiError> addressNotFound(
+            AddressNotFoundException exception
     ) {
 
     return error(
