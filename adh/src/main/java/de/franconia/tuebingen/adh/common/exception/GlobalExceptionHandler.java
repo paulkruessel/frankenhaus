@@ -9,6 +9,8 @@ import de.franconia.tuebingen.adh.corps.CorpsNotFoundException;
 import de.franconia.tuebingen.adh.corps.InvalidLeibburschException;
 import de.franconia.tuebingen.adh.corps.InvalidMembershipDataException;
 import de.franconia.tuebingen.adh.member.MemberNotFoundException;
+import de.franconia.tuebingen.adh.privacy.InvalidPrivacyRuleException;
+import de.franconia.tuebingen.adh.privacy.PrivacyResourceNotFoundException;
 import de.franconia.tuebingen.adh.profile.AddressNotFoundException;
 import de.franconia.tuebingen.adh.profile.ProfileNotFoundException;
 
@@ -170,6 +172,24 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.NOT_FOUND,
+                exception.getMessage());
+    }
+
+    @ExceptionHandler(PrivacyResourceNotFoundException.class)
+    public ResponseEntity<ApiError> privacyResourceNotFound(
+            PrivacyResourceNotFoundException exception) {
+
+        return error(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidPrivacyRuleException.class)
+    public ResponseEntity<ApiError> invalidPrivacyRule(
+            InvalidPrivacyRuleException exception) {
+
+        return error(
+                HttpStatus.BAD_REQUEST,
                 exception.getMessage());
     }
 }

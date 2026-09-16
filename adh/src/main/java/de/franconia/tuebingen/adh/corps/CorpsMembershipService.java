@@ -4,6 +4,9 @@ import de.franconia.tuebingen.adh.corps.dto.CorpsMembershipResponse;
 import de.franconia.tuebingen.adh.corps.dto.CreateCorpsMembershipRequest;
 import de.franconia.tuebingen.adh.corps.dto.UpdateCorpsMembershipRequest;
 
+import de.franconia.tuebingen.adh.privacy.PrivacyResourceType;
+import de.franconia.tuebingen.adh.privacy.PrivacyService;
+
 import de.franconia.tuebingen.adh.user.User;
 import de.franconia.tuebingen.adh.user.UserRepository;
 
@@ -23,15 +26,20 @@ public class CorpsMembershipService {
 
     private final UserRepository userRepository;
 
+    private final PrivacyService privacyService;
+
     public CorpsMembershipService(
             CorpsMembershipRepository membershipRepository,
             CorpsRepository corpsRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            PrivacyService privacyService) {
         this.membershipRepository = membershipRepository;
 
         this.corpsRepository = corpsRepository;
 
         this.userRepository = userRepository;
+
+        this.privacyService = privacyService;
     }
 
     @Transactional(readOnly = true)
@@ -148,6 +156,11 @@ public class CorpsMembershipService {
                         userId)
                 .orElseThrow(
                         CorpsMembershipNotFoundException::new);
+
+        privacyService.deleteRulesForResource(
+                userId,
+                PrivacyResourceType.CORPS_MEMBERSHIP,
+                membershipId);
 
         membershipRepository.delete(membership);
     }

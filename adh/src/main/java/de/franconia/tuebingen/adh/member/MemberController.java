@@ -8,6 +8,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+
 import org.springframework.validation.annotation.Validated;
 
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +32,9 @@ public class MemberController {
 
     @GetMapping
     public PageResponse<MemberSummaryResponse> searchMembers(
+
+            @AuthenticationPrincipal
+            Jwt jwt,
 
             @RequestParam(
                     defaultValue = ""
@@ -63,6 +69,7 @@ public class MemberController {
     ) {
 
         return memberService.searchMembers(
+                userId(jwt),
                 q,
                 page,
                 size
@@ -71,10 +78,26 @@ public class MemberController {
 
     @GetMapping("/{id}")
     public MemberDetailResponse getMember(
+
+            @AuthenticationPrincipal
+            Jwt jwt,
+
             @PathVariable
             UUID id
     ) {
 
-        return memberService.getMember(id);
+        return memberService.getMember(
+                userId(jwt),
+                id
+        );
+    }
+
+    private UUID userId(
+            Jwt jwt
+    ) {
+
+        return UUID.fromString(
+                jwt.getSubject()
+        );
     }
 }

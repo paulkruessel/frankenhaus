@@ -1,8 +1,12 @@
 package de.franconia.tuebingen.adh.profile;
 
+import de.franconia.tuebingen.adh.privacy.PrivacyResourceType;
+import de.franconia.tuebingen.adh.privacy.PrivacyService;
+
 import de.franconia.tuebingen.adh.profile.dto.AddressResponse;
 import de.franconia.tuebingen.adh.profile.dto.CreateAddressRequest;
 import de.franconia.tuebingen.adh.profile.dto.UpdateAddressRequest;
+
 import de.franconia.tuebingen.adh.user.User;
 import de.franconia.tuebingen.adh.user.UserRepository;
 
@@ -17,13 +21,16 @@ public class AddressService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final PrivacyService privacyService;
 
     public AddressService(
             AddressRepository addressRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            PrivacyService privacyService
     ) {
         this.addressRepository = addressRepository;
         this.userRepository = userRepository;
+        this.privacyService = privacyService;
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +118,12 @@ public class AddressService {
                 .orElseThrow(
                         AddressNotFoundException::new
                 );
+
+        privacyService.deleteRulesForResource(
+                userId,
+                PrivacyResourceType.ADDRESS,
+                addressId
+        );
 
         addressRepository.delete(address);
     }
