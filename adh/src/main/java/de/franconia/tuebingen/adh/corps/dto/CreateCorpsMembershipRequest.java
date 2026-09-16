@@ -1,8 +1,7 @@
 package de.franconia.tuebingen.adh.corps.dto;
 
 import de.franconia.tuebingen.adh.corps.MembershipStatus;
-
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -10,10 +9,14 @@ import java.util.UUID;
 
 public record CreateCorpsMembershipRequest(
 
-        @NotNull(
-                message = "Corps muss angegeben werden"
+        @NotBlank(
+                message = "Corpsname muss angegeben werden"
         )
-        UUID corpsId,
+        @Size(
+                max = 255,
+                message = "Corpsname darf maximal 255 Zeichen lang sein"
+        )
+        String corpsName,
 
         @Size(max = 255)
         String nameInCorps,

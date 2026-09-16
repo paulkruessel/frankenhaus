@@ -17,8 +17,7 @@ import java.util.UUID;
 @Service
 public class CorpsMembershipService {
 
-    private final CorpsMembershipRepository
-            membershipRepository;
+    private final CorpsMembershipRepository membershipRepository;
 
     private final CorpsRepository corpsRepository;
 
@@ -27,23 +26,17 @@ public class CorpsMembershipService {
     public CorpsMembershipService(
             CorpsMembershipRepository membershipRepository,
             CorpsRepository corpsRepository,
-            UserRepository userRepository
-    ) {
-        this.membershipRepository =
-                membershipRepository;
+            UserRepository userRepository) {
+        this.membershipRepository = membershipRepository;
 
-        this.corpsRepository =
-                corpsRepository;
+        this.corpsRepository = corpsRepository;
 
-        this.userRepository =
-                userRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
-    public List<CorpsMembershipResponse>
-    getOwnMemberships(
-            UUID userId
-    ) {
+    public List<CorpsMembershipResponse> getOwnMemberships(
+            UUID userId) {
 
         return membershipRepository
                 .findByUserId(userId)
@@ -55,37 +48,32 @@ public class CorpsMembershipService {
     @Transactional
     public CorpsMembershipResponse createMembership(
             UUID userId,
-            CreateCorpsMembershipRequest request
-    ) {
+            CreateCorpsMembershipRequest request) {
 
         User user = userRepository
                 .findById(userId)
                 .orElseThrow();
 
-        Corps corps = corpsRepository
-                .findById(request.corpsId())
-                .orElseThrow(
-                        CorpsNotFoundException::new
-                );
+        String corpsName = request.corpsName().trim();
 
-        if (
-                membershipRepository
-                        .existsByUserIdAndCorpsId(
-                                userId,
-                                corps.getId()
-                        )
-        ) {
+        Corps corps = corpsRepository
+                .findByName(corpsName)
+                .orElseThrow(
+                        CorpsNotFoundException::new);
+
+        if (membershipRepository
+                .existsByUserIdAndCorpsId(
+                        userId,
+                        corps.getId())) {
             throw new CorpsMembershipAlreadyExistsException();
         }
 
         validateDates(
                 request.admissionDate(),
                 request.receptionDate(),
-                request.philistrationDate()
-        );
+                request.philistrationDate());
 
-        CorpsMembership membership =
-                new CorpsMembership();
+        CorpsMembership membership = new CorpsMembership();
 
         membership.setUser(user);
         membership.setCorps(corps);
@@ -100,18 +88,14 @@ public class CorpsMembershipService {
                 request.admissionDate(),
                 request.receptionDate(),
                 request.philistrationDate(),
-                request.receptionPhoto()
-        );
+                request.receptionPhoto());
 
-        CorpsMembership saved =
-                membershipRepository.save(
-                        membership
-                );
+        CorpsMembership saved = membershipRepository.save(
+                membership);
 
         setLeibbursch(
                 saved,
-                request.leibburschMembershipId()
-        );
+                request.leibburschMembershipId());
 
         return toResponse(saved);
     }
@@ -120,24 +104,19 @@ public class CorpsMembershipService {
     public CorpsMembershipResponse updateMembership(
             UUID userId,
             UUID membershipId,
-            UpdateCorpsMembershipRequest request
-    ) {
+            UpdateCorpsMembershipRequest request) {
 
-        CorpsMembership membership =
-                membershipRepository
-                        .findByIdAndUserId(
-                                membershipId,
-                                userId
-                        )
-                        .orElseThrow(
-                                CorpsMembershipNotFoundException::new
-                        );
+        CorpsMembership membership = membershipRepository
+                .findByIdAndUserId(
+                        membershipId,
+                        userId)
+                .orElseThrow(
+                        CorpsMembershipNotFoundException::new);
 
         validateDates(
                 request.admissionDate(),
                 request.receptionDate(),
-                request.philistrationDate()
-        );
+                request.philistrationDate());
 
         apply(
                 membership,
@@ -149,13 +128,11 @@ public class CorpsMembershipService {
                 request.admissionDate(),
                 request.receptionDate(),
                 request.philistrationDate(),
-                request.receptionPhoto()
-        );
+                request.receptionPhoto());
 
         setLeibbursch(
                 membership,
-                request.leibburschMembershipId()
-        );
+                request.leibburschMembershipId());
 
         return toResponse(membership);
     }
@@ -163,64 +140,48 @@ public class CorpsMembershipService {
     @Transactional
     public void deleteMembership(
             UUID userId,
-            UUID membershipId
-    ) {
+            UUID membershipId) {
 
-        CorpsMembership membership =
-                membershipRepository
-                        .findByIdAndUserId(
-                                membershipId,
-                                userId
-                        )
-                        .orElseThrow(
-                                CorpsMembershipNotFoundException::new
-                        );
+        CorpsMembership membership = membershipRepository
+                .findByIdAndUserId(
+                        membershipId,
+                        userId)
+                .orElseThrow(
+                        CorpsMembershipNotFoundException::new);
 
         membershipRepository.delete(membership);
     }
 
     private void setLeibbursch(
             CorpsMembership membership,
-            UUID leibburschId
-    ) {
+            UUID leibburschId) {
 
         if (leibburschId == null) {
             membership.setLeibbursch(null);
             return;
         }
 
-        if (
-                membership.getId()
-                        .equals(leibburschId)
-        ) {
+        if (membership.getId()
+                .equals(leibburschId)) {
             throw new InvalidLeibburschException(
-                    "Eine Mitgliedschaft kann nicht ihr eigener Leibbursch sein"
-            );
+                    "Eine Mitgliedschaft kann nicht ihr eigener Leibbursch sein");
         }
 
-        CorpsMembership leibbursch =
-                membershipRepository
-                        .findById(leibburschId)
-                        .orElseThrow(
-                                () ->
-                                        new InvalidLeibburschException(
-                                                "Leibbursch-Mitgliedschaft wurde nicht gefunden"
-                                        )
-                        );
+        CorpsMembership leibbursch = membershipRepository
+                .findById(leibburschId)
+                .orElseThrow(
+                        () -> new InvalidLeibburschException(
+                                "Leibbursch-Mitgliedschaft wurde nicht gefunden"));
 
-        if (
-                !leibbursch
-                        .getCorps()
-                        .getId()
-                        .equals(
-                                membership
-                                        .getCorps()
-                                        .getId()
-                        )
-        ) {
+        if (!leibbursch
+                .getCorps()
+                .getId()
+                .equals(
+                        membership
+                                .getCorps()
+                                .getId())) {
             throw new InvalidLeibburschException(
-                    "Leibbursch muss Mitglied desselben Corps sein"
-            );
+                    "Leibbursch muss Mitglied desselben Corps sein");
         }
 
         membership.setLeibbursch(leibbursch);
@@ -236,70 +197,53 @@ public class CorpsMembershipService {
             LocalDate admissionDate,
             LocalDate receptionDate,
             LocalDate philistrationDate,
-            String receptionPhoto
-    ) {
+            String receptionPhoto) {
 
         membership.setNameInCorps(
-                normalize(nameInCorps)
-        );
+                normalize(nameInCorps));
 
         membership.setCorpsListNumber(
-                normalize(corpsListNumber)
-        );
+                normalize(corpsListNumber));
 
         membership.setBandNumber(
-                normalize(bandNumber)
-        );
+                normalize(bandNumber));
 
         membership.setBrackets(
-                normalize(brackets)
-        );
+                normalize(brackets));
 
         membership.setMembershipStatus(
-                membershipStatus
-        );
+                membershipStatus);
 
         membership.setAdmissionDate(
-                admissionDate
-        );
+                admissionDate);
 
         membership.setReceptionDate(
-                receptionDate
-        );
+                receptionDate);
 
         membership.setPhilistrationDate(
-                philistrationDate
-        );
+                philistrationDate);
 
         membership.setReceptionPhoto(
-                normalize(receptionPhoto)
-        );
+                normalize(receptionPhoto));
     }
 
     private void validateDates(
             LocalDate admissionDate,
             LocalDate receptionDate,
-            LocalDate philistrationDate
-    ) {
+            LocalDate philistrationDate) {
 
-        if (
-                admissionDate != null
+        if (admissionDate != null
                 && receptionDate != null
-                && receptionDate.isBefore(admissionDate)
-        ) {
+                && receptionDate.isBefore(admissionDate)) {
             throw new InvalidMembershipDataException(
-                    "Reception darf nicht vor der Admission liegen"
-            );
+                    "Reception darf nicht vor der Admission liegen");
         }
 
-        if (
-                receptionDate != null
+        if (receptionDate != null
                 && philistrationDate != null
-                && philistrationDate.isBefore(receptionDate)
-        ) {
+                && philistrationDate.isBefore(receptionDate)) {
             throw new InvalidMembershipDataException(
-                    "Philistrierung darf nicht vor der Reception liegen"
-            );
+                    "Philistrierung darf nicht vor der Reception liegen");
         }
     }
 
@@ -317,15 +261,13 @@ public class CorpsMembershipService {
     }
 
     private CorpsMembershipResponse toResponse(
-            CorpsMembership membership
-    ) {
+            CorpsMembership membership) {
 
-        UUID leibburschId =
-                membership.getLeibbursch() == null
-                        ? null
-                        : membership
-                                .getLeibbursch()
-                                .getId();
+        UUID leibburschId = membership.getLeibbursch() == null
+                ? null
+                : membership
+                        .getLeibbursch()
+                        .getId();
 
         return new CorpsMembershipResponse(
                 membership.getId(),
@@ -340,7 +282,6 @@ public class CorpsMembershipService {
                 membership.getReceptionDate(),
                 membership.getPhilistrationDate(),
                 membership.getReceptionPhoto(),
-                leibburschId
-        );
+                leibburschId);
     }
 }
