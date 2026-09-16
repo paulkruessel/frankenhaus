@@ -8,6 +8,7 @@ import de.franconia.tuebingen.adh.corps.CorpsMembershipNotFoundException;
 import de.franconia.tuebingen.adh.corps.CorpsNotFoundException;
 import de.franconia.tuebingen.adh.corps.InvalidLeibburschException;
 import de.franconia.tuebingen.adh.corps.InvalidMembershipDataException;
+import de.franconia.tuebingen.adh.member.MemberNotFoundException;
 import de.franconia.tuebingen.adh.profile.AddressNotFoundException;
 import de.franconia.tuebingen.adh.profile.ProfileNotFoundException;
 
@@ -160,6 +161,15 @@ public class GlobalExceptionHandler {
 
         return error(
                 HttpStatus.BAD_REQUEST,
+                exception.getMessage());
+    }
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<ApiError> memberNotFound(
+            MemberNotFoundException exception) {
+
+        return error(
+                HttpStatus.NOT_FOUND,
                 exception.getMessage());
     }
 }
