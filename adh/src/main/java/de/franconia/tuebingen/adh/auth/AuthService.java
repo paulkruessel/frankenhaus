@@ -124,7 +124,7 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthenticationResult login(
             LoginRequest request
     ) {
