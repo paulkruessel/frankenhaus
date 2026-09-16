@@ -23,8 +23,9 @@ public class Address {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 50)
-    private String type;
+    private AddressType type;
 
     @Column(length = 255)
     private String street;
