@@ -34,7 +34,7 @@ public class CorpsMembership {
     private Corps corps;
 
     @Column(name = "corps_name", length = 255)
-    private String corpsName;
+    private String nameInCorps;
 
     @Column(name = "corps_list_number", length = 100)
     private String corpsListNumber;

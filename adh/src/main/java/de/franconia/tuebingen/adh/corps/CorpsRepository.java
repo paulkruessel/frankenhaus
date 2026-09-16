@@ -5,6 +5,10 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CorpsRepository extends JpaRepository<Corps, UUID> {
+public interface CorpsRepository
+        extends JpaRepository<Corps, UUID> {
+
     Optional<Corps> findByName(String name);
+
+    boolean existsByName(String name);
 }
