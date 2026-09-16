@@ -37,141 +37,115 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
+        @Bean
+        PasswordEncoder passwordEncoder() {
 
-        return PasswordEncoderFactories
-                .createDelegatingPasswordEncoder();
-    }
+                return PasswordEncoderFactories
+                                .createDelegatingPasswordEncoder();
+        }
 
-    @Bean
-    AuthenticationManager authenticationManager(
-            AppUserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
+        @Bean
+        AuthenticationManager authenticationManager(
+                        AppUserDetailsService userDetailsService,
+                        PasswordEncoder passwordEncoder) {
 
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(
-                        userDetailsService
-                );
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(
+                                userDetailsService);
 
-        provider.setPasswordEncoder(passwordEncoder);
+                provider.setPasswordEncoder(passwordEncoder);
 
-        return new ProviderManager(provider);
-    }
+                return new ProviderManager(provider);
+        }
 
-    @Bean
-    JwtEncoder jwtEncoder(
-            RSAPublicKey publicKey,
-            RSAPrivateKey privateKey
-    ) {
+        @Bean
+        JwtEncoder jwtEncoder(
+                        RSAPublicKey publicKey,
+                        RSAPrivateKey privateKey) {
 
-        return NimbusJwtEncoder
-                .withKeyPair(
-                        publicKey,
-                        privateKey
-                )
-                .build();
-    }
+                return NimbusJwtEncoder
+                                .withKeyPair(
+                                                publicKey,
+                                                privateKey)
+                                .build();
+        }
 
-    @Bean
-    JwtDecoder jwtDecoder(
-            RSAPublicKey publicKey,
-            JwtProperties properties
-    ) {
+        @Bean
+        JwtDecoder jwtDecoder(
+                        RSAPublicKey publicKey,
+                        JwtProperties properties) {
 
-        NimbusJwtDecoder decoder =
-                NimbusJwtDecoder
-                        .withPublicKey(publicKey)
-                        .signatureAlgorithm(
-                                SignatureAlgorithm.RS256
-                        )
-                        .build();
+                NimbusJwtDecoder decoder = NimbusJwtDecoder
+                                .withPublicKey(publicKey)
+                                .signatureAlgorithm(
+                                                SignatureAlgorithm.RS256)
+                                .build();
 
-        var issuerValidator =
-                JwtValidators.createDefaultWithIssuer(
-                        properties.issuer()
-                );
+                var issuerValidator = JwtValidators.createDefaultWithIssuer(
+                                properties.issuer());
 
-        var audienceValidator =
-                new JwtAudienceValidator(
-                        properties.audience()
-                );
+                var audienceValidator = new JwtAudienceValidator(
+                                properties.audience());
 
-        decoder.setJwtValidator(
-                new DelegatingOAuth2TokenValidator<>(
-                        issuerValidator,
-                        audienceValidator
-                )
-        );
+                decoder.setJwtValidator(
+                                new DelegatingOAuth2TokenValidator<>(
+                                                issuerValidator,
+                                                audienceValidator));
 
-        return decoder;
-    }
+                return decoder;
+        }
 
-    @Bean
-    JwtAuthenticationConverter
-    jwtAuthenticationConverter() {
+        @Bean
+        JwtAuthenticationConverter jwtAuthenticationConverter() {
 
-        JwtGrantedAuthoritiesConverter roles =
-                new JwtGrantedAuthoritiesConverter();
+                JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
 
-        roles.setAuthoritiesClaimName("roles");
-        roles.setAuthorityPrefix("ROLE_");
+                roles.setAuthoritiesClaimName("roles");
+                roles.setAuthorityPrefix("ROLE_");
 
-        JwtAuthenticationConverter converter =
-                new JwtAuthenticationConverter();
+                JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
 
-        converter.setJwtGrantedAuthoritiesConverter(
-                roles
-        );
+                converter.setJwtGrantedAuthoritiesConverter(
+                                roles);
 
-        return converter;
-    }
+                return converter;
+        }
 
-    @Bean
-    SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            JwtAuthenticationConverter converter
-    ) throws Exception {
+        @Bean
+        SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        JwtAuthenticationConverter converter) throws Exception {
 
-        return http
+                return http
 
-                .csrf(csrf -> csrf.disable())
+                                .csrf(csrf -> csrf.disable())
 
-                .cors(Customizer.withDefaults())
+                                .cors(Customizer.withDefaults())
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/auth/refresh"
-                        )
-                        .permitAll()
+                                                .requestMatchers(
+                                                                "/api/auth/register",
+                                                                "/api/auth/login",
+                                                                "/api/auth/refresh")
+                                                .permitAll()
 
-                        .requestMatchers(
-                                "/error"
-                        )
-                        .permitAll()
+                                                .requestMatchers(
+                                                                "/error",
+                                                                "/swagger-ui.html",
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
 
-                        .anyRequest()
-                        .authenticated()
-                )
+                                                .anyRequest()
+                                                .authenticated())
 
-                .oauth2ResourceServer(resourceServer ->
-                        resourceServer.jwt(jwt ->
-                                jwt.jwtAuthenticationConverter(
-                                        converter
-                                )
-                        )
-                )
+                                .oauth2ResourceServer(resourceServer -> resourceServer
+                                                .jwt(jwt -> jwt.jwtAuthenticationConverter(
+                                                                converter)))
 
-                .build();
-    }
+                                .build();
+        }
 }
