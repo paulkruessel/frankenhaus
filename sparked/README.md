@@ -66,6 +66,54 @@ To format the codebase with Prettier, run:
 pnpm run format
 ```
 
+## Authentication
+
+The frontend uses a short-lived access token and a refresh token stored by
+the browser as an HttpOnly cookie.
+
+### Login
+
+The login page sends the credentials to `POST /api/auth/login` with
+`withCredentials: true`. The backend returns an access token in the JSON
+response and sets the `refresh_token` cookie. The access token is kept only
+in memory by `AuthService`; it is not written to `localStorage` or
+`sessionStorage`.
+
+The HTTP interceptor adds the access token to protected API requests:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+### Reload and refresh
+
+On application startup, `provideAppInitializer` calls
+`AuthService.refreshToken()`. Angular waits for this request before the
+initial route is activated, so the user sees a blank page during the initial
+handshake.
+
+- If the refresh cookie is valid, the backend rotates it and returns a new
+	access token. The user is taken directly to the protected application.
+- If the cookie is missing, expired, or invalid, the refresh fails silently,
+	the in-memory token is cleared, and the authentication guard redirects to
+	`/auth/login`.
+
+The interceptor also refreshes the token when it is expired or when a
+protected request returns `401`. The original request is retried once after
+a successful refresh.
+
+### Logout
+
+Logout calls `POST /api/auth/logout` with `withCredentials: true`. The
+backend revokes the refresh token and deletes the cookie; the frontend clears
+the in-memory access token.
+
+### Local development
+
+The local backend runs over HTTP, so `security.refresh-cookie-secure=false`
+is configured for development. In production the application must run over
+HTTPS and this setting must be `true`.
+
 ### Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

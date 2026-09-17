@@ -1,60 +1,62 @@
 package de.franconia.tuebingen.adh.auth;
 
-import jakarta.servlet.http.Cookie;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseCookie;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RefreshTokenCookieService {
 
-    private static final String COOKIE_NAME =
-            "refresh_token";
+        private static final String COOKIE_NAME = "refresh_token";
 
-    private final JwtProperties properties;
+        private final JwtProperties properties;
+        private final boolean secure;
 
-    public RefreshTokenCookieService(
-            JwtProperties properties
-    ) {
-        this.properties = properties;
-    }
+        public RefreshTokenCookieService(JwtProperties properties) {
+                this(properties, true);
+        }
 
-    public ResponseCookie create(
-            String refreshToken
-    ) {
+        @Autowired
+        public RefreshTokenCookieService(
+                        JwtProperties properties,
+                        @Value("${security.refresh-cookie-secure:true}") boolean secure) {
+                this.properties = properties;
+                this.secure = secure;
+        }
 
-        return ResponseCookie
-                .from(
-                        COOKIE_NAME,
-                        refreshToken
-                )
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/api/auth")
-                .maxAge(
-                        properties
-                                .refreshTokenLifetime()
-                )
-                .build();
-    }
+        public ResponseCookie create(
+                        String refreshToken) {
 
-    public ResponseCookie delete() {
+                return ResponseCookie
+                                .from(
+                                                COOKIE_NAME,
+                                                refreshToken)
+                                .httpOnly(true)
+                                .secure(secure)
+                                .sameSite("Strict")
+                                .path("/api/auth")
+                                .maxAge(
+                                                properties
+                                                                .refreshTokenLifetime())
+                                .build();
+        }
 
-        return ResponseCookie
-                .from(
-                        COOKIE_NAME,
-                        ""
-                )
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/api/auth")
-                .maxAge(0)
-                .build();
-    }
+        public ResponseCookie delete() {
 
-    public String cookieName() {
-        return COOKIE_NAME;
-    }
+                return ResponseCookie
+                                .from(
+                                                COOKIE_NAME,
+                                                "")
+                                .httpOnly(true)
+                                .secure(secure)
+                                .sameSite("Strict")
+                                .path("/api/auth")
+                                .maxAge(0)
+                                .build();
+        }
+
+        public String cookieName() {
+                return COOKIE_NAME;
+        }
 }
